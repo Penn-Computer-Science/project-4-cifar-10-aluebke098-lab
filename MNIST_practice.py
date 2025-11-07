@@ -95,6 +95,28 @@ plt.tight_layout() #idk what exactly this does.
 plt.show()
 # if the graph shows the training data cross the validation data, then the model is overfit
 
+
+# predict the test data
+test_loss, test_acc = model.evaluate(x_test, y_test) 
+print('Test accuracy:', test_acc)
+
+#generate the confusion matrix
+
+# Predict the values from the testing dataset
+Y_pred = model.predict(x_test)
+# Convert predictions classes to one hot vectors 
+Y_pred_classes = np.argmax(Y_pred,axis = 1) 
+# Convert testing observations to one hot vectors
+Y_true = np.argmax(y_test,axis = 1)
+# compute the confusion matrix
+confusion_mtx = tf.math.confusion_matrix(Y_true, Y_pred_classes) 
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(confusion_mtx, annot=True, fmt='g')
+plt.show()
+
+
+
 # fascinating discovery:
 # 
 #   model = tf.keras.models.Sequential(

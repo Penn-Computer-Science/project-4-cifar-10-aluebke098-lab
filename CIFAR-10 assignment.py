@@ -7,7 +7,10 @@ import matplotlib.pyplot as plt #plot graphs
 import matplotlib.image as mpimg #output images
 import random #not really required
 
-print("Tensorflow: ", tf.__version__, "Seaborne: ", sns.__version__)
+# print("Tensorflow: ", tf.__version__, "Seaborne: ", sns.__version__)
+
+# define labels 
+class_labels = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # making a dataframe using the cifar-10 dataset
 from keras.datasets import cifar10
@@ -23,36 +26,38 @@ print("Any NaN Training: ", np.isnan(x_train).any())
 print("Any NaN Testing: ", np.isnan(x_test).any())
 
 # tell the model what shape to expect
-input_shape = (28, 28, 1) # 28x28 pixels(p0x), 1 color channel for grayscale (3 color channels for RGB)
+input_shape = (32, 32, 3) # 32x32 pixels(p0x), 1 color channel for grayscale (3 color channels for RGB)
 
 # reshape the data to include all the images at once
-x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 1) # (60_000, 28, 28, 1)
+# x_train = x_train.reshape(x_train.shape[0], x_train.shape[1], x_train.shape[2], 3) # (50_000, 32, 32, 3) --> doesn't work w/ CiFar10
 x_train = x_train.astype('float32') / 255.0 #normalize the data to be between 0 and 1 (relative% instead of 0-255)
-x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 1)
+# x_test = x_test.reshape(x_test.shape[0], x_test.shape[1], x_test.shape[2], 3)
 x_test = x_test.astype('float32') / 255.0
 
 # convert labels to be one-hot, not sparse
-y_train = tf.one_hot(y_train.astype(np.int32), depth=10) #forcing the y_train data to be an integer through numpy, depth bc the vector has 10 parts (10 options)
-y_test = tf.one_hot(y_test.astype(np.int32), depth=10)
+from keras.utils import to_categorical
+
+y_train = to_categorical(y_train, 10) #labels a category (ex:bird,plane,etc), 10 categories
+y_test = to_categorical(y_test, 10)
 
 for i in range(3):
     # show an example image from MNIST
-    example = random.randint(0,59_999)
+    example = random.randint(0,49_999)
     plt.imshow(x_train[example][:,:,0]) #colon means not to change the value
-    # print(y_train[example])
+    print(class_labels[np.where(y_train[example]==1)[0]]) #trying to make this work to show the object label
     plt.show()
 
-batch_size = 128 #how many images to look at at a time; more in-depth data needs smaller batches
+batch_size = 64 #how many images to look at at a time; more in-depth data needs smaller batches
 num_classes = 10 #bc theres 10 numbers
-epochs = 5 #number of times through the data
+epochs = 10 #number of times through the data
 
 # build the model
 model = tf.keras.models.Sequential(
     [
-        tf.keras.layers.Conv2D(32, (5,5), padding='same', activation='relu', input_shape=input_shape),
+        tf.keras.layers.Conv2D(64, (5,5), padding='same', activation='relu', input_shape=input_shape),
         #convolutional 2D neural network building the edge detection: 32 kernels(filters), 5x5 p0x each; padding-> input+output same size - don't bother scanning the margins;
         #relu is a common shape; input_shape stays the same
-        tf.keras.layers.Conv2D(32, (3,3), padding='same', activation='relu', input_shape=input_shape), #same but finer comb through
+        tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), #same but finer comb through
         tf.keras.layers.MaxPool2D(), #flatten and reduce the size of things; converge data
         tf.keras.layers.Dropout(0.25), #turn off a random 25% of the nuerons(filters) to prevent overfitting (learning/infering instead of memorizing)
         tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), #more filters than previous Conv2D
@@ -96,14 +101,26 @@ plt.tight_layout() #idk what exactly this does.
 plt.show()
 # if the graph shows the training data cross the validation data, then the model is overfit
 
-# fascinating discovery:
-# 
-#   model = tf.keras.models.Sequential(
-#       [
-#           tf.keras.layers.Flatten(), #take all the info and flatten into one thing so that the dense can read it
-#           tf.keras.layers.Dense(num_classes, activation='softmax') #output layer; softmax activation gives probabilities that goes back to one-hot to get an estimate answer
-#       ]
-#   )
-#   model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['acc'])
-# 
-# output is around 92% accuracy and 30% loss with the mnist dataset (5 epochs)
+# predict the test data
+test_loss, test_acc = model.evaluate(x_test, y_test) 
+print('Test accuracy:', test_acc)
+
+#generate the confusion matrix
+
+
+
+# Predict the values from the testing dataset
+Y_pred = model.predict(x_test)
+# Convert predictions classes to one hot vectors 
+Y_pred_classes = np.argmax(Y_pred,axis = 1) 
+# Convert testing observations to one hot vectors
+Y_true = np.argmax(y_test,axis = 1)
+# compute the confusion matrix
+confusion_mtx = tf.math.confusion_matrix(Y_true, Y_pred_classes) 
+
+plt.figure(figsize=(10, 8))
+sns.heatmap(confusion_mtx, annot=True, fmt='g', xticklabels=class_labels, yticklabels=class_labels)
+plt.xlabel('Predicted Label')
+plt.ylabel('True Label')
+plt.title('Confusion Matrix')
+plt.show()
