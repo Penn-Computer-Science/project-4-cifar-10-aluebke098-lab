@@ -52,10 +52,10 @@ for i in range(3):
 
 batch_size = 64 #how many images to look at at a time; more in-depth data needs smaller batches
 num_classes = 10 #bc theres 10 numbers
-epochs = 5 #number of times through the data
+epochs = 10 #number of times through the data
 
 # build the model
-model_1 = tf.keras.models.Sequential( # 10 epochs: acc:73%, loss:70%, val_acc:73%, val_loss:75% - slightly overfit || 5 epochs: acc:69%, loss:87%, val_acc:72%, val_loss:79%
+model_1 = tf.keras.models.Sequential( # 10 epochs: acc:75.0%, loss:70.0%, val_acc:75.2%, val_loss:71.2% - slightly overfit || 5 epochs: acc:69%, loss:87%, val_acc:72%, val_loss:79%
     [
         tf.keras.layers.Conv2D(64, (5,5), padding='same', activation='relu', input_shape=input_shape),
         #convolutional 2D neural network building the edge detection: 32 kernels(filters), 5x5 p0x each; padding-> input+output same size - don't bother scanning the margins;
@@ -103,7 +103,9 @@ model_3 = tf.keras.models.Sequential( # 5 epochs: acc:65%, loss:97%, val_acc:68%
     ]
 )
 
-model_4 = tf.keras.models.Sequential( # 5 epochs: acc:%, loss:%, val_acc:%, val_loss:%          testing model_4 next time!
+model_4 = tf.keras.models.Sequential( # 5 epochs: acc:70%, loss:85%, val_acc:72%, val_loss:78% - similar to model 1 but slightly better; also minimally overfit
+    # || 10 epochs: acc:75.4%, loss:70.2%, val_acc:75.1%, val_loss:70.8%
+    # conclusion: about the same as model 1, negligible difference; will be going back to model 1 as the base
     [
         tf.keras.layers.Conv2D(64, (5,5), padding='same', activation='relu', input_shape=input_shape),
         tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), 
@@ -119,15 +121,40 @@ model_4 = tf.keras.models.Sequential( # 5 epochs: acc:%, loss:%, val_acc:%, val_
     ]
 )
 
+model_5 = tf.keras.models.Sequential( # 5 epochs: acc:71%, loss:81%, val_acc:74%, val_loss:74% || 10 epochs: acc:77.3%, loss:65.2%, val_acc:76.8%, val_loss:66.9%
+    # slightly better than model 1, also slightly overfit after 10
+    # conclusion: will use as final model.
+    [
+        tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), #testing adjusting 5x5 p0x to 3x3 p0x
+        tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), 
+        tf.keras.layers.MaxPool2D(), 
+        tf.keras.layers.Dropout(0.25), 
+        tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape), 
+        tf.keras.layers.Conv2D(64, (3,3), padding='same', activation='relu', input_shape=input_shape),
+        tf.keras.layers.MaxPool2D(),
+        tf.keras.layers.Dropout(0.50),
+        tf.keras.layers.Flatten(), 
+        tf.keras.layers.Dense(num_classes, activation='softmax') 
+    ]
+)
+
+model_lol = tf.keras.models.Sequential( # 5 epochs: acc:38%, loss:178%, val_acc:35%, val_loss:185% || 10 epochs: acc:39%, loss:175%, val_acc:36%, val_loss:183%
+    # this wasn't expected to be accurate in the slightest, I was just curious how it would do
+    [
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(num_classes, activation='softmax')
+    ]
+)
+
 # categorical_crossentropy is for one-hot, to force the prediction into a category; the metric for its answer is decided by which one has the highest accuracy
 # if not one-hot, use softmax for loss instead
 # common optimizer: Adam  - it's just an algorithm; idk whats the difference between these two 
 # model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), loss='categorical_crossentropy', metrics=['acc'])
-model_3.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['acc'])
+model_lol.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['acc'])
 
 # model is trained on data from x- and y- train; batch size and epochs are inputed from vars defined earlier; x- and y- test are assigned to validate the model's accuracy
 # assigning the model to variable(history) makes it easier to reference for the graphs
-history = model_3.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
+history = model_lol.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
 
 # plot out training and validation accuraccy and loss - MatPlotLib
 fig, ax = plt.subplots(2,1) #two plots at once; one on top and the other on the bottom; idk what the 'fig' at the start does tho
@@ -152,15 +179,13 @@ plt.show()
 # if the graph shows the training data cross the validation data, then the model is overfit
 
 # predict the test data
-test_loss, test_acc = model_3.evaluate(x_test, y_test) 
+test_loss, test_acc = model_lol.evaluate(x_test, y_test) 
 print('Test accuracy:', test_acc)
 
 #generate the confusion matrix
 
-
-
 # Predict the values from the testing dataset
-Y_pred = model_3.predict(x_test)
+Y_pred = model_lol.predict(x_test)
 # Convert predictions classes to one hot vectors 
 Y_pred_classes = np.argmax(Y_pred,axis = 1) 
 # Convert testing observations to one hot vectors
@@ -174,3 +199,6 @@ plt.xlabel('Predicted Label')
 plt.ylabel('True Label')
 plt.title('Confusion Matrix')
 plt.show()
+
+# model summary
+print('Model Summary:', model_1.summary())
