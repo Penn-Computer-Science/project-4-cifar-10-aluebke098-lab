@@ -150,11 +150,11 @@ model_lol = tf.keras.models.Sequential( # 5 epochs: acc:38%, loss:178%, val_acc:
 # if not one-hot, use softmax for loss instead
 # common optimizer: Adam  - it's just an algorithm; idk whats the difference between these two 
 # model.compile(optimizer=tf.keras.optimizers.RMSprop(epsilon=1e-08), loss='categorical_crossentropy', metrics=['acc'])
-model_lol.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['acc'])
+model_5.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['acc'])
 
 # model is trained on data from x- and y- train; batch size and epochs are inputed from vars defined earlier; x- and y- test are assigned to validate the model's accuracy
 # assigning the model to variable(history) makes it easier to reference for the graphs
-history = model_lol.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
+history = model_5.fit(x_train, y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_test, y_test))
 
 # plot out training and validation accuraccy and loss - MatPlotLib
 fig, ax = plt.subplots(2,1) #two plots at once; one on top and the other on the bottom; idk what the 'fig' at the start does tho
@@ -179,13 +179,13 @@ plt.show()
 # if the graph shows the training data cross the validation data, then the model is overfit
 
 # predict the test data
-test_loss, test_acc = model_lol.evaluate(x_test, y_test) 
+test_loss, test_acc = model_5.evaluate(x_test, y_test) 
 print('Test accuracy:', test_acc)
 
 #generate the confusion matrix
 
 # Predict the values from the testing dataset
-Y_pred = model_lol.predict(x_test)
+Y_pred = model_5.predict(x_test)
 # Convert predictions classes to one hot vectors 
 Y_pred_classes = np.argmax(Y_pred,axis = 1) 
 # Convert testing observations to one hot vectors
@@ -201,4 +201,4 @@ plt.title('Confusion Matrix')
 plt.show()
 
 # model summary
-print('Model Summary:', model_1.summary())
+print('Model Summary:', model_5.summary())
